@@ -1,0 +1,2 @@
+streamlit, tensorflow-cpu, mysql-connector-python, pandas, pillow, numpy, cloudinary.
+Verification: El archivo requirements.txt aparece en tu carpeta local junto a app.py y styles.css.

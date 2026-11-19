@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #0f172a;
+}
+
+.stApp {
+    background-color: #f4f7f6 !important;
+}
+
+.block-container {
+    max-width: 1180px !important;
+    padding-top: 2rem !important;
+    padding-bottom: 3rem !important;
+}
+
+[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #071a14 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+[data-testid="stSidebar"] * {
+    color: #f1f5f9 !important;
+}
+
+div[class*="st-key-card"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 1.5rem 1.75rem !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+}
+div[class*="st-key-card"] > div {
+    background-color: transparent !important;
+}
+
+[data-testid="stTabs"] [role="tablist"] {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0;
+    padding: 6px !important;
+    border-radius: 12px !important;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+[data-testid="stTabs"] button[role="tab"] {
+    font-weight: 600 !important;
+    color: #475569 !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
+    background-color: #ecfdf5 !important;
+    color: #065f46 !important;
+}
+
+.section-tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #0f766e;
+    margin-bottom: 4px;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 14px;
+}
+
+.station-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #0f766e;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+.kpi-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.06em;
+}
+.kpi-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f766e;
+    margin-top: 4px;
+}
+
+.status-ok { background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+.status-warn { background-color: #fef9c3; color: #854d0e; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+.status-err { background-color: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+
+.stButton > button {
+    background: linear-gradient(135deg, #0f766e 0%, #065f46 100%) !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    border: none !important;
+    padding: 0.6rem 1.4rem !important;
+    box-shadow: 0 4px 12px rgba(6, 95, 70, 0.22);
+    transition: all 0.2s ease;
+}
+.stButton > button:hover {
+    background: linear-gradient(135deg, #0d9488 0%, #047857 100%) !important;
+    transform: translateY(-1px);
+}
+/* =========================================================================
+   DISEÑO PARA MÓVILES Y TABLETS
+   ========================================================================= */
+@media (max-width: 768px) {
+    .block-container {
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
+        padding-top: 1rem !important;
+    }
+
+    div[class*="st-key-card"] {
+        padding: 1rem 1.1rem !important;
+        border-radius: 14px !important;
+    }
+
+    h1 {
+        font-size: 1.45rem !important;
+        line-height: 1.25 !important;
+    }
+    .section-title {
+        font-size: 1.05rem !important;
+    }
+
+    .station-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px;
+    }
+
+    .stButton > button {
+        width: 100% !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.92rem !important;
+    }
+
+    [data-testid="stTabs"] [role="tablist"] {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        scrollbar-width: none;
+    }
+    [data-testid="stTabs"] button[role="tab"] {
+        white-space: nowrap !important;
+        font-size: 0.82rem !important;
+        padding: 6px 12px !important;
+    }
+}
