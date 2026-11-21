@@ -1,19 +1,28 @@
+import os
 import streamlit as st
 from PIL import Image
 import datetime
 import base64
 import mysql.connector
+import cloudinary
+import cloudinary.uploader
 from tensorflow.keras.models import load_model
 import numpy as np
 import pandas as pd
 
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
+    api_key=os.getenv("CLOUDINARY_API_KEY", ""),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET", "")
+)
+
 def conectar_bd():
     return mysql.connector.connect(
-        host="127.0.0.1",
-        port=3306,
-        user="root",
-        password="",
-        database="ecosurba_db"
+        host=os.getenv("DB_HOST", "127.0.0.1"),
+        port=int(os.getenv("DB_PORT", 3306)),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "ecosurba_db")
     )
 
 def obtener_estaciones():
@@ -149,6 +158,7 @@ if st.session_state["en_bienvenida"]:
                 "lon": [-73.0312, -73.0450, -73.0180]
             })
         st.map(df_puntos, latitude=5.8275, longitude=-73.0312, zoom=12, use_container_width=True)
+
 
 else:
     with st.sidebar:
@@ -318,14 +328,23 @@ else:
                 severidad = {"NORMAL": 0, "ATENCIÓN": 1, "ALTERACIÓN": 2}
                 estado_general = estado_ia if severidad[estado_ia] >= severidad[estado_fisico] else estado_fisico
 
+                url_foto = None
+                if archivo_foto is not None:
+                    try:
+                        archivo_foto.seek(0)
+                        res_cloud = cloudinary.uploader.upload(archivo_foto, folder="ecosurba_muestras")
+                        url_foto = res_cloud.get("secure_url")
+                    except Exception:
+                        url_foto = None
+
                 try:
                     conexion = conectar_bd()
                     cursor = conexion.cursor()
                     cursor.execute(
                         """INSERT INTO historial_monitoreo
-                           (id_estacion, fecha, punto, ph, temperatura, turbidez, estado, confianza, observaciones)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                        (id_estacion_sel, str(fecha_actual), punto_muestreo, ph_val, temp_val, turbidez_val, estado_general, confianza_texto, observaciones_val)
+                           (id_estacion, fecha, punto, ph, temperatura, turbidez, estado, confianza, observaciones, ruta_imagen)
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (id_estacion_sel, str(fecha_actual), punto_muestreo, ph_val, temp_val, turbidez_val, estado_general, confianza_texto, observaciones_val, url_foto)
                     )
                     id_nuevo_monitoreo = cursor.lastrowid
 
@@ -342,7 +361,7 @@ else:
                     conexion.close()
                     st.success("Muestra procesada y registrada exitosamente." + (" Se generó una alerta ambiental." if estado_general != "NORMAL" else ""))
                 except Exception as e:
-                    st.error(f"Error al conectar con MySQL (verifica que XAMPP esté encendido): {e}")
+                    st.error(f"Error al conectar con MySQL: {e}")
 
                 st.session_state["analizado"] = True
                 st.session_state["res_estado"] = estado_general
@@ -382,7 +401,8 @@ else:
                 cursor = conexion.cursor()
                 cursor.execute("""
                     SELECT h.fecha, COALESCE(e.nombre, h.punto), h.ph, h.temperatura,
-                           h.turbidez, h.estado, h.confianza, COALESCE(h.observaciones, '-')
+                           h.turbidez, h.estado, h.confianza, COALESCE(h.observaciones, '-'),
+                           COALESCE(h.ruta_imagen, 'Sin foto')
                     FROM historial_monitoreo h
                     LEFT JOIN estaciones_monitoreo e ON h.id_estacion = e.id_estacion
                     ORDER BY h.id DESC
@@ -394,9 +414,13 @@ else:
                 else:
                     df_historial = pd.DataFrame(
                         filas,
-                        columns=["Fecha", "Estación", "pH", "Temp (°C)", "Turbidez", "Estado", "Confianza", "Observaciones"]
+                        columns=["Fecha", "Estación", "pH", "Temp (°C)", "Turbidez", "Estado", "Confianza", "Observaciones", "Evidencia"]
                     )
-                    st.dataframe(df_historial, use_container_width=True)
+                    st.dataframe(
+                        df_historial,
+                        column_config={"Evidencia": st.column_config.LinkColumn("Evidencia", display_text="Ver foto")},
+                        use_container_width=True
+                    )
 
                 st.markdown("<hr style='border-color:#e2e8f0; margin:24px 0;'>", unsafe_allow_html=True)
                 st.markdown("<div class='section-tag'>SISTEMA DE ALERTAS TEMPRANAS</div><div class='section-title'>Alertas Ambientales Registradas</div>", unsafe_allow_html=True)
@@ -416,7 +440,7 @@ else:
                     df_alertas = pd.DataFrame(alertas, columns=["Fecha y Hora", "Nivel", "Detalle de Alerta", "Estado"])
                     st.dataframe(df_alertas, use_container_width=True)
             except Exception as e:
-                st.error(f"No se pudo conectar a MySQL (enciende MySQL en XAMPP): {e}")
+                st.error(f"No se pudo conectar a MySQL: {e}")
 
     with tab_resenas:
         with st.container(border=True, key="card_resenas"):
