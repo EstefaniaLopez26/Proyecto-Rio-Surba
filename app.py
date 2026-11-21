@@ -234,8 +234,9 @@ else:
                 )
                 id_estacion_sel = mapa_estaciones.get(punto_muestreo)
             with col_f:
-                fecha_actual = st.date_input("Fecha de registro en campo", datetime.date.today())
-
+                fecha_colombia = datetime.datetime.now(ZoneInfo("America/Bogota")).date()
+                fecha_actual = st.date_input("Fecha de registro en campo", fecha_colombia)
+                
             c_ph, c_temp, c_turb = st.columns(3)
             with c_ph:
                 ph_val = st.number_input("Valor de pH", min_value=0.0, max_value=14.0, value=7.00, step=0.01)
@@ -333,11 +334,14 @@ else:
                 url_foto = None
                 if archivo_foto is not None:
                     try:
-                        archivo_foto.seek(0)
-                        res_cloud = cloudinary.uploader.upload(archivo_foto, folder="ecosurba_muestras")
-                        url_foto = res_cloud.get("secure_url")
-                    except Exception:
                         url_foto = None
+           if archivo_foto is not None:
+               try:
+                   archivo_foto.seek(0)
+                   res_cloud = cloudinary.uploader.upload(archivo_foto, folder="ecosurba_muestras")
+                   url_foto = res_cloud.get("secure_url")
+               except Exception as e_cloud:
+                   st.warning(f"No se pudo subir la imagen a Cloudinary: {e_cloud}")
 
                 try:
                     conexion = conectar_bd()
@@ -402,13 +406,13 @@ else:
                 conexion = conectar_bd()
                 cursor = conexion.cursor()
                 cursor.execute("""
-                    SELECT h.fecha, COALESCE(e.nombre, h.punto), h.ph, h.temperatura,
-                           h.turbidez, h.estado, h.confianza, COALESCE(h.observaciones, '-'),
-                           COALESCE(h.ruta_imagen, 'Sin foto')
-                    FROM historial_monitoreo h
-                    LEFT JOIN estaciones_monitoreo e ON h.id_estacion = e.id_estacion
-                    ORDER BY h.id DESC
-                """)
+               SELECT h.fecha, COALESCE(e.nombre, h.punto), h.ph, h.temperatura,
+                      h.turbidez, h.estado, h.confianza, COALESCE(h.observaciones, '-'),
+                      h.ruta_imagen
+               FROM historial_monitoreo h
+               LEFT JOIN estaciones_monitoreo e ON h.id_estacion = e.id_estacion
+               ORDER BY h.id DESC
+           """)
                 filas = cursor.fetchall()
 
                 if not filas:
