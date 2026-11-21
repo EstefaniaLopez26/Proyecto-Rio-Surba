@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from PIL import Image
 import datetime
+from zoneinfo import ZoneInfo
 import base64
 import mysql.connector
 import cloudinary
@@ -9,22 +10,28 @@ import cloudinary.uploader
 from tensorflow.keras.models import load_model
 import numpy as np
 import pandas as pd
-import datetime
-from zoneinfo import ZoneInfo
+
+def obtener_secreto(clave, defecto=""):
+    try:
+        if clave in st.secrets:
+            return st.secrets[clave]
+    except Exception:
+        pass
+    return os.getenv(clave, defecto)
 
 cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
-    api_key=os.getenv("CLOUDINARY_API_KEY", ""),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET", "")
+    cloud_name=obtener_secreto("CLOUDINARY_CLOUD_NAME"),
+    api_key=obtener_secreto("CLOUDINARY_API_KEY"),
+    api_secret=obtener_secreto("CLOUDINARY_API_SECRET")
 )
 
 def conectar_bd():
     return mysql.connector.connect(
-        host=os.getenv("DB_HOST", "127.0.0.1"),
-        port=int(os.getenv("DB_PORT", 3306)),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", ""),
-        database=os.getenv("DB_NAME", "ecosurba_db")
+        host=obtener_secreto("DB_HOST", "127.0.0.1"),
+        port=int(obtener_secreto("DB_PORT", 3306)),
+        user=obtener_secreto("DB_USER", "root"),
+        password=obtener_secreto("DB_PASSWORD", ""),
+        database=obtener_secreto("DB_NAME", "ecosurba_db")
     )
 
 def obtener_estaciones():
@@ -236,7 +243,7 @@ else:
             with col_f:
                 fecha_colombia = datetime.datetime.now(ZoneInfo("America/Bogota")).date()
                 fecha_actual = st.date_input("Fecha de registro en campo", fecha_colombia)
-                
+
             c_ph, c_temp, c_turb = st.columns(3)
             with c_ph:
                 ph_val = st.number_input("Valor de pH", min_value=0.0, max_value=14.0, value=7.00, step=0.01)
@@ -334,14 +341,11 @@ else:
                 url_foto = None
                 if archivo_foto is not None:
                     try:
-                        url_foto = None
-           if archivo_foto is not None:
-               try:
-                   archivo_foto.seek(0)
-                   res_cloud = cloudinary.uploader.upload(archivo_foto, folder="ecosurba_muestras")
-                   url_foto = res_cloud.get("secure_url")
-               except Exception as e_cloud:
-                   st.warning(f"No se pudo subir la imagen a Cloudinary: {e_cloud}")
+                        archivo_foto.seek(0)
+                        res_cloud = cloudinary.uploader.upload(archivo_foto, folder="ecosurba_muestras")
+                        url_foto = res_cloud.get("secure_url")
+                    except Exception as e_cloud:
+                        st.warning(f"No se pudo subir la imagen a Cloudinary: {e_cloud}")
 
                 try:
                     conexion = conectar_bd()
@@ -406,13 +410,13 @@ else:
                 conexion = conectar_bd()
                 cursor = conexion.cursor()
                 cursor.execute("""
-               SELECT h.fecha, COALESCE(e.nombre, h.punto), h.ph, h.temperatura,
-                      h.turbidez, h.estado, h.confianza, COALESCE(h.observaciones, '-'),
-                      h.ruta_imagen
-               FROM historial_monitoreo h
-               LEFT JOIN estaciones_monitoreo e ON h.id_estacion = e.id_estacion
-               ORDER BY h.id DESC
-           """)
+                    SELECT h.fecha, COALESCE(e.nombre, h.punto), h.ph, h.temperatura,
+                           h.turbidez, h.estado, h.confianza, COALESCE(h.observaciones, '-'),
+                           h.ruta_imagen
+                    FROM historial_monitoreo h
+                    LEFT JOIN estaciones_monitoreo e ON h.id_estacion = e.id_estacion
+                    ORDER BY h.id DESC
+                """)
                 filas = cursor.fetchall()
 
                 if not filas:
@@ -467,11 +471,12 @@ else:
                         st.warning("Por favor ingresa tu nombre.")
                     else:
                         try:
+                            fecha_hoy_col = datetime.datetime.now(ZoneInfo("America/Bogota")).date()
                             conexion = conectar_bd()
                             cursor = conexion.cursor()
                             cursor.execute(
                                 "INSERT INTO resenas_usuario (fecha, nombre, valoracion, recomendacion, gusto) VALUES (%s, %s, %s, %s, %s)",
-                                (str(datetime.date.today()), nombre_usuario, estrellas_val, recomendacion_txt, gusto_txt)
+                                (str(fecha_hoy_col), nombre_usuario, estrellas_val, recomendacion_txt, gusto_txt)
                             )
                             conexion.commit()
                             cursor.close()
